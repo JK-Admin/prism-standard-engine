@@ -201,6 +201,7 @@
 <!-- CHAT -->
 <div class="view active" id="view-chat">
   <div id="config-area"></div>
+  <!-- Board-Fortschrittsanzeige -->
   <div class="board-progress" id="board-progress">
     <div class="bp-title">🧠 Board diskutiert...</div>
     <div class="bp-steps">
@@ -223,7 +224,7 @@
       </div>
       <div class="bp-step" id="bp-step-3">
         <div class="bp-step-icon">🎯</div>
-        <div class="bp-step-label">Runde 3 – Board-Synthese &amp; Entscheidung</div>
+        <div class="bp-step-label">Runde 3 – Board-Synthese & Entscheidung</div>
         <div class="bp-step-status" id="bp-step-3-status"></div>
       </div>
     </div>
@@ -272,7 +273,7 @@
     <span style="font-size:28px">🚀</span>
     <div>
       <h2>Pragmatist-Agent</h2>
-      <p>Wo können wir vereinfachen, automatisieren, anders denken – und trotzdem compliant &amp; zertifizierungsfähig bleiben?</p>
+      <p>Wo können wir vereinfachen, automatisieren, anders denken – und trotzdem compliant & zertifizierungsfähig bleiben?</p>
     </div>
   </div>
   <div class="ent-ask-area">
@@ -308,6 +309,7 @@
       <p style="margin-top:4px;font-size:12px">PRISM-Doku, VDA-ISA, ISO-Texte, Prozessdokumente...</p>
       <input type="file" id="file-input" style="display:none" accept=".txt,.md,.pdf,.docx,.csv,.json" onchange="fileSelected(event)"/>
     </div>
+
     <div class="upload-form" id="upload-form" style="display:none">
       <div>
         <label>Datei</label>
@@ -325,7 +327,7 @@
           <option value="object_model_delta">Objektmodell / Datenmodell</option>
           <option value="workflow_blueprint">Workflow / Prozessdokumentation</option>
           <option value="phase_fit_matrix">Phase-Fit Matrix</option>
-          <option value="assumptions">Annahmen &amp; Rahmenbedingungen</option>
+          <option value="assumptions">Annahmen & Rahmenbedingungen</option>
           <option value="glossary">Glossar / Begriffe</option>
         </select>
       </div>
@@ -334,11 +336,12 @@
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary" id="upload-btn" onclick="uploadFile()">
-          <span id="upload-label">Hochladen &amp; einbetten</span>
+          <span id="upload-label">Hochladen & einbetten</span>
         </button>
         <button class="btn btn-ghost" onclick="cancelUpload()">Abbrechen</button>
       </div>
     </div>
+
     <div>
       <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted)">GESPEICHERTE DOKUMENTE</div>
       <div class="upload-history" id="upload-history"><div class="empty" style="padding:16px">Lade...</div></div>
@@ -355,6 +358,7 @@ let selectedFile = null;
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function fmtDate(iso){ return new Date(iso).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 
+// ── CONFIG ──
 function checkConfig(){
   if(!OPENAI_KEY){
     document.getElementById('config-area').innerHTML=`
@@ -376,6 +380,7 @@ function saveKey(){
   addMsg('system','✅ API Key gespeichert. Das Board ist bereit.');
 }
 
+// ── NAV ──
 function showView(name,btn){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
@@ -386,6 +391,7 @@ function showView(name,btn){
   if(name==='upload') loadUploadHistory();
 }
 
+// ── CHAT ──
 function addMsg(role, content, data=null){
   const box=document.getElementById('chat-messages');
   const div=document.createElement('div');
@@ -493,6 +499,7 @@ async function sendMessage(){
   setSending(false);
 }
 
+// ── BOARD PROGRESS ──
 const PROGRESS_STEPS = [
   { id:'bp-step-1', agents:['bpa-compliance','bpa-tech','bpa-entrepreneur'], status:'bp-step-1-status', duration:12000 },
   { id:'bp-step-2', agents:[], status:'bp-step-2-status', duration:6000 },
@@ -557,6 +564,7 @@ function setSending(v){
   if(v) showProgress(); else hideProgress();
 }
 
+// ── VOICE ──
 let mediaRec,audioChunks=[];
 async function startRecording(e){
   if(e) e.preventDefault();
@@ -593,6 +601,7 @@ async function stopRecording(){
   };
 }
 
+// ── ENTREPRENEUR / PRAGMATIST AGENT ──
 function handleEntKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runEntrepreneur();}}
 
 async function runEntrepreneur(){
@@ -675,7 +684,7 @@ function renderEntResult(d, originalQuery){
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
         <span>${catIcon[l.category]||'💡'}</span>
         <div class="ent-lever-title">${esc(l.title)}</div>
-        <span class="hack-tag ${catClass[l.category]||\'\'}">${esc(l.category)}</span>
+        <span class="hack-tag ${catClass[l.category]||''}">${esc(l.category)}</span>
         <span style="font-size:11px;color:var(--muted)">${effortLabel[l.effort]||''} · Impact: ${esc(l.impact)}</span>
       </div>
       <div class="ent-lever-desc">${esc(l.idea)}</div>
@@ -721,6 +730,8 @@ function renderEntResult(d, originalQuery){
   results.scrollTop=0;
 }
 
+// ── ARTIFACTS ──
+let allArtifacts=[];
 async function loadArtifacts(){
   document.getElementById('artifacts-panel').innerHTML='<div class="empty">Lade...</div>';
   try{
@@ -730,7 +741,6 @@ async function loadArtifacts(){
     renderArtifacts(null);
   }catch(e){ document.getElementById('artifacts-panel').innerHTML=`<div class="empty">Fehler: ${e.message}</div>`; }
 }
-let allArtifacts=[];
 function buildFilters(){
   const types=[...new Set(allArtifacts.map(a=>a.artifact_type))];
   const bar=document.getElementById('artifact-filters');
@@ -759,6 +769,7 @@ function renderArtifacts(type){
     </div>`).join('');
 }
 
+// ── DECISIONS ──
 async function loadDecisions(){
   document.getElementById('decisions-panel').innerHTML='<div class="empty">Lade...</div>';
   try{
@@ -786,6 +797,7 @@ function renderDecisions(list){
     </div>`).join('');
 }
 
+// ── UPLOAD ──
 function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('dragover');}
 function dragLeave(e){document.getElementById('upload-zone').classList.remove('dragover');}
 function dropFile(e){
@@ -863,6 +875,7 @@ async function loadUploadHistory(){
   }catch(e){el.innerHTML=`<div class="empty">Fehler: ${e.message}</div>`;}
 }
 
+// ── INIT ──
 checkConfig();
 </script>
 </body>
