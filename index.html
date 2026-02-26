@@ -1,1 +1,869 @@
-<!DOCTYPE html><html><head><title>PRISM Test Deploy</title></head><body><h1>PRISM Decision Board</h1><p>Test-Deploy via Claude Integration – February 26, 2026.</p></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PRISM – Standard Engine</title>
+<style>
+  :root {
+    --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3250;
+    --accent:#6366f1;--accent2:#818cf8;--text:#e2e4f0;--muted:#8b90b0;
+    --green:#22c55e;--yellow:#eab308;--red:#ef4444;--orange:#f97316;
+    --entrepreneur:#f59e0b;--entrepreneur2:#fcd34d;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;height:100dvh;display:flex;flex-direction:column;}
+  nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;height:52px;flex-shrink:0;gap:2px;}
+  .nav-brand{font-weight:700;font-size:15px;color:var(--accent2);margin-right:20px;letter-spacing:.5px;}
+  .nav-tab{padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;border:none;background:none;}
+  .nav-tab:hover{color:var(--text);background:var(--surface2);}
+  .nav-tab.active{color:var(--accent2);background:rgba(99,102,241,.15);}
+  main{flex:1;overflow:hidden;display:flex;}
+  .view{display:none;flex:1;flex-direction:column;overflow:hidden;}
+  .view.active{display:flex;}
+
+  /* CHAT */
+  .chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+  .msg{max-width:82%;padding:10px 14px;border-radius:12px;font-size:14px;line-height:1.55;}
+  .msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px;}
+  .msg.ai{align-self:flex-start;background:var(--surface2);border:1px solid var(--border);border-bottom-left-radius:4px;max-width:90%;}
+  .msg.system{align-self:center;background:transparent;color:var(--muted);font-size:12px;font-style:italic;}
+  .msg.error{align-self:flex-start;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#fca5a5;}
+  .msg-summary{font-weight:600;margin-bottom:8px;line-height:1.4;}
+  .msg-meta{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;}
+  .msg-meta span{background:rgba(255,255,255,.05);padding:2px 8px;border-radius:4px;}
+  .board-toggle{font-size:12px;color:var(--accent2);cursor:pointer;margin-top:8px;display:inline-block;}
+  .board-perspectives{display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:8px;}
+  .board-perspectives.hidden{display:none;}
+  .perspective{background:rgba(255,255,255,.03);border-radius:6px;padding:8px 10px;font-size:12px;}
+  .perspective-expert{font-weight:700;color:var(--accent2);margin-bottom:3px;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}
+
+  /* ENTREPRENEUR CALLOUT */
+  .entrepreneur-callout{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:10px;margin-top:10px;overflow:hidden;}
+  .entrepreneur-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;user-select:none;}
+  .entrepreneur-header:hover{background:rgba(245,158,11,.08);}
+  .entrepreneur-icon{font-size:16px;}
+  .entrepreneur-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--entrepreneur2);flex:1;}
+  .entrepreneur-arr{font-size:11px;color:var(--entrepreneur);transition:transform .2s;}
+  .entrepreneur-body{display:none;padding:10px 12px;border-top:1px solid rgba(245,158,11,.15);display:flex;flex-direction:column;gap:8px;}
+  .entrepreneur-body.hidden{display:none;}
+  .entrepreneur-hack{background:rgba(245,158,11,.06);border-left:3px solid var(--entrepreneur);border-radius:0 6px 6px 0;padding:8px 10px;font-size:12px;line-height:1.6;}
+  .hack-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;margin-right:4px;}
+  .hack-tag.automate{background:rgba(99,102,241,.2);color:var(--accent2);}
+  .hack-tag.simplify{background:rgba(34,197,94,.2);color:#86efac;}
+  .hack-tag.reframe{background:rgba(249,115,22,.2);color:#fdba74;}
+  .hack-tag.tech{background:rgba(14,165,233,.2);color:#7dd3fc;}
+  .hack-tag.risk{background:rgba(239,68,68,.15);color:#fca5a5;}
+  .entrepreneur-cta{font-size:11px;color:var(--entrepreneur);font-style:italic;margin-top:4px;}
+
+  .sizing-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .size-badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;}
+  .size-XS{background:rgba(34,197,94,.15);color:#86efac;}
+  .size-S{background:rgba(34,197,94,.2);color:#86efac;}
+  .size-M{background:rgba(234,179,8,.15);color:#fde047;}
+  .size-L{background:rgba(249,115,22,.2);color:#fdba74;}
+  .size-XL{background:rgba(239,68,68,.2);color:#fca5a5;}
+  .open-q{font-size:12px;color:var(--muted);margin-top:6px;}
+  .chat-input-area{padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;}
+  .chat-input-area textarea{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;font-size:14px;resize:none;min-height:42px;max-height:120px;outline:none;line-height:1.4;}
+  .chat-input-area textarea:focus{border-color:var(--accent);}
+  .btn{padding:10px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:6px;}
+  .btn-primary{background:var(--accent);color:#fff;}
+  .btn-primary:hover{background:var(--accent2);}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent2);}
+  .btn-danger{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.3);}
+  .record-btn{width:42px;height:42px;padding:0;justify-content:center;border-radius:50%;flex-shrink:0;}
+  .record-btn.recording{background:var(--red);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+  /* ENTREPRENEUR VIEW */
+  .ent-panel-header{padding:16px;background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.04));border-bottom:1px solid rgba(245,158,11,.2);display:flex;align-items:center;gap:12px;flex-shrink:0;}
+  .ent-panel-header h2{font-size:16px;font-weight:700;color:var(--entrepreneur2);}
+  .ent-panel-header p{font-size:12px;color:var(--muted);margin-top:2px;}
+  .ent-ask-area{padding:12px 16px;background:var(--surface);border-bottom:1px solid rgba(245,158,11,.2);display:flex;gap:8px;align-items:flex-end;}
+  .ent-ask-area textarea{flex:1;background:var(--surface2);border:1px solid rgba(245,158,11,.3);border-radius:10px;color:var(--text);padding:10px 12px;font-size:14px;resize:none;min-height:42px;max-height:100px;outline:none;line-height:1.4;}
+  .ent-ask-area textarea:focus{border-color:var(--entrepreneur);}
+  .btn-entrepreneur{background:rgba(245,158,11,.2);color:var(--entrepreneur2);border:1px solid rgba(245,158,11,.4);}
+  .btn-entrepreneur:hover{background:rgba(245,158,11,.3);}
+  .btn-entrepreneur:disabled{opacity:.4;cursor:not-allowed;}
+  .ent-results{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .ent-card{background:var(--surface);border:1px solid rgba(245,158,11,.2);border-radius:12px;overflow:hidden;}
+  .ent-card-header{padding:12px 16px;background:rgba(245,158,11,.05);border-bottom:1px solid rgba(245,158,11,.15);display:flex;align-items:center;gap:8px;}
+  .ent-card-title{font-weight:700;font-size:14px;color:var(--entrepreneur2);flex:1;}
+  .ent-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px;}
+  .ent-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:2px;}
+  .ent-section-value{font-size:13px;line-height:1.6;color:var(--text);}
+  .ent-lever{background:rgba(245,158,11,.05);border-left:3px solid var(--entrepreneur);border-radius:0 6px 6px 0;padding:8px 10px;margin-top:4px;}
+  .ent-lever-title{font-size:12px;font-weight:700;color:var(--entrepreneur2);margin-bottom:3px;}
+  .ent-lever-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+  .compliance-row{display:flex;align-items:center;gap:8px;font-size:12px;margin-top:4px;}
+  .compliance-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .dot-green{background:var(--green);}
+  .dot-yellow{background:var(--yellow);}
+  .dot-red{background:var(--red);}
+  .ent-empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:14px;line-height:1.8;}
+
+  /* PANELS */
+  .panel{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .toolbar{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+  .toolbar-title{font-size:14px;font-weight:600;}
+  .spacer{flex:1;}
+  .filter-chip{padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);}
+  .filter-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;}
+  .card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .card-title{font-weight:600;font-size:15px;}
+  .card-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+  .badge-type{background:rgba(99,102,241,.15);color:var(--accent2);}
+  .badge-proposed{background:rgba(234,179,8,.15);color:#fde047;}
+  .badge-accepted{background:rgba(34,197,94,.15);color:#86efac;}
+  .badge-rejected{background:rgba(239,68,68,.15);color:#fca5a5;}
+  .content-md{font-size:13px;color:var(--muted);line-height:1.6;white-space:pre-wrap;max-height:180px;overflow:hidden;position:relative;cursor:pointer;}
+  .content-md.expanded{max-height:none;}
+  .content-md:not(.expanded)::after{content:'';position:absolute;bottom:0;left:0;right:0;height:40px;background:linear-gradient(transparent,var(--surface));pointer-events:none;}
+  .decision-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .decision-header{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+  .decision-header:hover{background:var(--surface2);}
+  .decision-body{padding:16px;display:none;border-top:1px solid var(--border);}
+  .decision-body.open{display:block;}
+  .dl{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;font-weight:600;}
+  .dt{font-size:13px;line-height:1.6;white-space:pre-wrap;margin-bottom:12px;}
+
+  /* UPLOAD */
+  .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);}
+  .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(99,102,241,.05);}
+  .upload-zone h3{font-size:15px;margin-bottom:8px;}
+  .upload-zone p{font-size:13px;color:var(--muted);}
+  .upload-form{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;}
+  .upload-form label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  .field{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 12px;font-size:13px;outline:none;width:100%;}
+  .field:focus{border-color:var(--accent);}
+  select.field option{background:var(--surface2);}
+  .upload-progress{background:var(--surface2);border-radius:8px;height:6px;overflow:hidden;margin-top:4px;}
+  .upload-progress-bar{height:100%;background:var(--accent);transition:width .3s;width:0%;}
+  .upload-history{display:flex;flex-direction:column;gap:8px;}
+  .upload-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;font-size:13px;}
+  .upload-item-icon{font-size:20px;flex-shrink:0;}
+  .upload-item-info{flex:1;}
+  .upload-item-title{font-weight:600;}
+  .upload-item-meta{font-size:12px;color:var(--muted);}
+
+  /* CONFIG */
+  .config-banner{background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:10px;padding:14px 16px;margin:16px;display:flex;flex-direction:column;gap:8px;}
+  .config-banner h3{font-size:14px;color:#fde047;}
+  .config-row{display:flex;gap:8px;align-items:center;}
+  .config-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-size:13px;outline:none;font-family:monospace;}
+  .config-input:focus{border-color:var(--accent);}
+
+  .spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* BOARD PROGRESS */
+  .board-progress{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin:0 16px 8px;display:none;flex-direction:column;gap:8px;}
+  .board-progress.active{display:flex;}
+  .bp-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+  .bp-steps{display:flex;flex-direction:column;gap:6px;}
+  .bp-step{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);transition:color .3s;}
+  .bp-step.active{color:var(--text);}
+  .bp-step.done{color:var(--green);}
+  .bp-step-icon{width:20px;text-align:center;font-size:14px;flex-shrink:0;}
+  .bp-step-label{flex:1;}
+  .bp-step-status{font-size:10px;font-weight:600;}
+  .bp-step.active .bp-step-status{color:var(--accent2);}
+  .bp-step.done .bp-step-status{color:var(--green);}
+  .bp-agents{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+  .bp-agent{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid var(--border);color:var(--muted);transition:all .3s;}
+  .bp-agent.active{border-color:var(--accent);color:var(--accent2);background:rgba(99,102,241,.1);}
+  .bp-agent.done{border-color:var(--green);color:#86efac;background:rgba(34,197,94,.08);}
+  .empty{text-align:center;color:var(--muted);padding:48px 16px;font-size:14px;}
+
+  @media(max-width:600px){
+    .msg{max-width:95%;}
+    nav{padding:0 8px;}
+    .nav-tab{padding:6px 8px;font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<nav>
+  <span class="nav-brand">PRISM</span>
+  <button class="nav-tab active" onclick="showView('chat',this)">💬 Chat</button>
+  <button class="nav-tab" onclick="showView('artifacts',this)">📄 Artefakte</button>
+  <button class="nav-tab" onclick="showView('decisions',this)">⚖️ Decisions</button>
+  <button class="nav-tab" onclick="showView('entrepreneur',this)">🚀 Pragmatist</button>
+  <button class="nav-tab" onclick="showView('upload',this)">📎 Wissen</button>
+</nav>
+<main>
+
+<!-- CHAT -->
+<div class="view active" id="view-chat">
+  <div id="config-area"></div>
+  <div class="board-progress" id="board-progress">
+    <div class="bp-title">🧠 Board diskutiert...</div>
+    <div class="bp-steps">
+      <div class="bp-step" id="bp-step-1">
+        <div class="bp-step-icon">⚡</div>
+        <div class="bp-step-label">
+          Runde 1 – Parallele Analyse
+          <div class="bp-agents">
+            <span class="bp-agent" id="bpa-compliance">⚖️ Compliance</span>
+            <span class="bp-agent" id="bpa-tech">🔧 Tech</span>
+            <span class="bp-agent" id="bpa-entrepreneur">🚀 Pragmatist</span>
+          </div>
+        </div>
+        <div class="bp-step-status" id="bp-step-1-status"></div>
+      </div>
+      <div class="bp-step" id="bp-step-2">
+        <div class="bp-step-icon">⚔️</div>
+        <div class="bp-step-label">Runde 2 – Konflikte identifizieren</div>
+        <div class="bp-step-status" id="bp-step-2-status"></div>
+      </div>
+      <div class="bp-step" id="bp-step-3">
+        <div class="bp-step-icon">🎯</div>
+        <div class="bp-step-label">Runde 3 – Board-Synthese &amp; Entscheidung</div>
+        <div class="bp-step-status" id="bp-step-3-status"></div>
+      </div>
+    </div>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="msg system">Willkommen im PRISM Board. Das Board diskutiert jetzt in 3 Runden: Analyse → Konflikt → Synthese. Schreib eine Nachricht oder halte 🎤.</div>
+  </div>
+  <div class="chat-input-area">
+    <textarea id="chat-input" placeholder="Idee, Entscheidung, Beobachtung..." rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn record-btn btn-ghost" id="record-btn"
+      onmousedown="startRecording()" onmouseup="stopRecording()"
+      ontouchstart="startRecording(event)" ontouchend="stopRecording()">🎤</button>
+    <button class="btn btn-primary" id="send-btn" onclick="sendMessage()">
+      <span id="send-label">Senden</span>
+    </button>
+  </div>
+</div>
+
+<!-- ARTIFACTS -->
+<div class="view" id="view-artifacts">
+  <div class="toolbar">
+    <span class="toolbar-title">Artefakte</span>
+    <div class="spacer"></div>
+    <div id="artifact-filters" style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="filter-chip active" onclick="filterArtifacts(null,this)">Alle</button>
+    </div>
+    <button class="btn btn-ghost" onclick="loadArtifacts()" style="font-size:12px">↺</button>
+  </div>
+  <div class="panel" id="artifacts-panel"><div class="empty">Lade...</div></div>
+</div>
+
+<!-- DECISIONS -->
+<div class="view" id="view-decisions">
+  <div class="toolbar">
+    <span class="toolbar-title">Decision Log (ADR)</span>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost" onclick="loadDecisions()" style="font-size:12px">↺</button>
+  </div>
+  <div class="panel" id="decisions-panel"><div class="empty">Lade...</div></div>
+</div>
+
+<!-- ENTREPRENEUR / PRAGMATIST -->
+<div class="view" id="view-entrepreneur">
+  <div class="ent-panel-header">
+    <span style="font-size:28px">🚀</span>
+    <div>
+      <h2>Pragmatist-Agent</h2>
+      <p>Wo können wir vereinfachen, automatisieren, anders denken – und trotzdem compliant &amp; zertifizierungsfähig bleiben?</p>
+    </div>
+  </div>
+  <div class="ent-ask-area">
+    <textarea id="ent-input" placeholder="Beschreib einen Prozess, eine Anforderung oder ein Problem – der Agent sucht den pragmatischen Weg..." rows="2"
+      onkeydown="handleEntKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="btn btn-entrepreneur" id="ent-btn" onclick="runEntrepreneur()">
+      <span id="ent-label">Analysieren</span>
+    </button>
+  </div>
+  <div class="ent-results" id="ent-results">
+    <div class="ent-empty">
+      🎯 Beschreib einen Prozess oder eine Anforderung.<br><br>
+      Der Pragmatist-Agent sucht gezielt nach:<br>
+      <strong style="color:var(--entrepreneur2)">Automatisierungshebeln · Vereinfachungspotenzial<br>
+      Technologie-Shortcuts · Compliance-smarten Abkürzungen</strong><br><br>
+      <span style="font-size:12px">Immer mit Blick auf: Zertifizierungsfähigkeit bleibt erhalten.</span>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD / WISSEN -->
+<div class="view" id="view-upload">
+  <div class="toolbar">
+    <span class="toolbar-title">📎 Wissensbasis</span>
+    <div class="spacer"></div>
+    <span style="font-size:12px;color:var(--muted)">TXT, MD, PDF, DOCX, CSV, JSON</span>
+  </div>
+  <div class="panel">
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
+      ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+      <h3>📄 Dokument hochladen</h3>
+      <p>Klicken oder Datei reinziehen</p>
+      <p style="margin-top:4px;font-size:12px">PRISM-Doku, VDA-ISA, ISO-Texte, Prozessdokumente...</p>
+      <input type="file" id="file-input" style="display:none" accept=".txt,.md,.pdf,.docx,.csv,.json" onchange="fileSelected(event)"/>
+    </div>
+    <div class="upload-form" id="upload-form" style="display:none">
+      <div>
+        <label>Datei</label>
+        <div style="font-size:13px;color:var(--text);margin-top:4px" id="upload-filename"></div>
+      </div>
+      <div>
+        <label>Titel</label>
+        <input class="field" id="upload-title" type="text" placeholder="z.B. PRISM Objektmodell v2.3"/>
+      </div>
+      <div>
+        <label>Dokumenttyp</label>
+        <select class="field" id="upload-doctype">
+          <option value="reference_document">Referenzdokument (allgemein)</option>
+          <option value="standard_dna">Standard DNA (TISAX, ISO...)</option>
+          <option value="object_model_delta">Objektmodell / Datenmodell</option>
+          <option value="workflow_blueprint">Workflow / Prozessdokumentation</option>
+          <option value="phase_fit_matrix">Phase-Fit Matrix</option>
+          <option value="assumptions">Annahmen &amp; Rahmenbedingungen</option>
+          <option value="glossary">Glossar / Begriffe</option>
+        </select>
+      </div>
+      <div class="upload-progress" id="upload-progress-bar-wrap" style="display:none">
+        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="upload-btn" onclick="uploadFile()">
+          <span id="upload-label">Hochladen &amp; einbetten</span>
+        </button>
+        <button class="btn btn-ghost" onclick="cancelUpload()">Abbrechen</button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--muted)">GESPEICHERTE DOKUMENTE</div>
+      <div class="upload-history" id="upload-history"><div class="empty" style="padding:16px">Lade...</div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<script>
+const BASE = 'https://hdkgadqgovihffuowtxe.supabase.co/functions/v1';
+let OPENAI_KEY = localStorage.getItem('prism_openai_key') || '';
+let selectedFile = null;
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDate(iso){ return new Date(iso).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+
+function checkConfig(){
+  if(!OPENAI_KEY){
+    document.getElementById('config-area').innerHTML=`
+    <div class="config-banner">
+      <h3>⚙️ OpenAI API Key benötigt</h3>
+      <p style="font-size:13px;color:var(--muted)">Einmalig eingeben – wird lokal gespeichert.</p>
+      <div class="config-row">
+        <input class="config-input" id="key-input" type="password" placeholder="sk-..."/>
+        <button class="btn btn-primary" onclick="saveKey()">Speichern</button>
+      </div>
+    </div>`;
+  }
+}
+function saveKey(){
+  const k=document.getElementById('key-input').value.trim();
+  if(!k.startsWith('sk-')){alert('Kein gültiger OpenAI Key');return;}
+  OPENAI_KEY=k; localStorage.setItem('prism_openai_key',k);
+  document.getElementById('config-area').innerHTML='';
+  addMsg('system','✅ API Key gespeichert. Das Board ist bereit.');
+}
+
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='artifacts') loadArtifacts();
+  if(name==='decisions') loadDecisions();
+  if(name==='upload') loadUploadHistory();
+}
+
+function addMsg(role, content, data=null){
+  const box=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className=`msg ${role}`;
+
+  if(role==='ai' && data){
+    const conflicts = (data.conflict_resolutions||[]).map(c=>`
+      <div class="perspective" style="border-left:3px solid var(--orange);padding-left:10px;">
+        <div class="perspective-expert" style="color:var(--orange)">⚔️ Konflikt gelöst: ${esc(c.conflict)}</div>
+        <div style="margin-bottom:3px">${esc(c.decision)}</div>
+        <div style="font-size:11px;color:var(--muted)">${esc(c.rationale)}</div>
+      </div>`).join('');
+
+    const perspectives = (data.board_perspectives||[]).map(p=>`
+      <div class="perspective">
+        <div class="perspective-expert">${esc(p.expert)}</div>
+        <div>${esc(p.assessment||p.key_point||'')}</div>
+      </div>`).join('');
+
+    const sizing = (data.implementation_sizing||[]).map(s=>
+      `<span class="size-badge size-${s.size}" title="${esc(s.rationale)}">${esc(s.topic)}: ${s.size}</span>`
+    ).join('');
+
+    const questions = (data.open_questions||[]).map(q=>
+      `<div class="open-q">❓ ${esc(q.question)}</div>`
+    ).join('');
+
+    const entHacks = data.entrepreneur_hacks || [];
+    const entHtml = entHacks.length ? `
+      <div class="entrepreneur-callout">
+        <div class="entrepreneur-header" onclick="toggleEnt(this)">
+          <span class="entrepreneur-icon">🚀</span>
+          <span class="entrepreneur-label">Pragmatist-Agent: ${entHacks.length} Optimierungsidee${entHacks.length>1?'n':''}</span>
+          <span class="entrepreneur-arr">▼</span>
+        </div>
+        <div class="entrepreneur-body hidden">
+          ${entHacks.map(h=>`
+            <div class="entrepreneur-hack">
+              <div>
+                ${(h.tags||[]).map(t=>`<span class="hack-tag ${t}">${t}</span>`).join('')}
+              </div>
+              <div style="font-weight:600;font-size:13px;margin-bottom:4px;color:var(--entrepreneur2)">${esc(h.title)}</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.6">${esc(h.idea)}</div>
+              ${h.compliance_note?`<div style="font-size:11px;color:#86efac;margin-top:6px">✅ ${esc(h.compliance_note)}</div>`:''}
+            </div>`).join('')}
+          <div class="entrepreneur-cta">→ Für tiefe Analyse: Tab "🚀 Pragmatist" öffnen</div>
+        </div>
+      </div>` : '';
+
+    div.innerHTML=`
+      <div class="msg-summary">${esc(content)}</div>
+      <div class="msg-meta">
+        ${data.artifact_updates?`<span>📄 ${data.artifact_updates} Artefakte</span>`:''}
+        ${data.decisions?`<span>⚖️ ${data.decisions} Decisions</span>`:''}
+        ${data.backlog_items?`<span>🎯 ${data.backlog_items} Backlog</span>`:''}
+        ${data.open_questions?.length?`<span>❓ ${data.open_questions.length} Fragen</span>`:''}
+      </div>
+      ${sizing?`<div class="sizing-row">${sizing}</div>`:''}
+      ${questions}
+      ${conflicts?`<span class="board-toggle" onclick="toggleBoard(this)">▼ Konfliktlösungen anzeigen (${data.conflict_resolutions.length})</span><div class="board-perspectives hidden">${conflicts}</div>`:''}
+      ${perspectives?`<span class="board-toggle" onclick="toggleBoard(this)">▼ Board-Perspektiven anzeigen</span><div class="board-perspectives hidden">${perspectives}</div>`:''}
+      ${entHtml}`;
+  } else {
+    div.textContent=content;
+  }
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+
+function toggleBoard(btn){
+  const bp=btn.nextElementSibling;
+  const hidden=bp.classList.toggle('hidden');
+  btn.textContent=hidden?'▼ Board-Perspektiven anzeigen':'▲ Board-Perspektiven ausblenden';
+}
+function toggleEnt(header){
+  const body=header.nextElementSibling;
+  const arr=header.querySelector('.entrepreneur-arr');
+  const hidden=body.classList.toggle('hidden');
+  arr.textContent=hidden?'▼':'▲';
+  arr.style.transform=hidden?'':'rotate(180deg)';
+}
+
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+
+async function sendMessage(){
+  const inp=document.getElementById('chat-input');
+  const text=inp.value.trim();
+  if(!text||!OPENAI_KEY) return;
+  inp.value=''; inp.style.height='auto';
+  addMsg('user',text);
+  setSending(true);
+  try{
+    const res=await fetch(`${BASE}/ingest`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-openai-key':OPENAI_KEY},
+      body:JSON.stringify({text,author:'Jürgen',source:'web'})
+    });
+    const d=await res.json();
+    if(d.error) throw new Error(d.error);
+    addMsg('ai',d.summary,d);
+  }catch(e){
+    addMsg('error','⚠️ Fehler: '+e.message);
+  }
+  setSending(false);
+}
+
+const PROGRESS_STEPS = [
+  { id:'bp-step-1', agents:['bpa-compliance','bpa-tech','bpa-entrepreneur'], status:'bp-step-1-status', duration:12000 },
+  { id:'bp-step-2', agents:[], status:'bp-step-2-status', duration:6000 },
+  { id:'bp-step-3', agents:[], status:'bp-step-3-status', duration:6000 }
+];
+let progressTimer = null;
+
+function showProgress(){
+  const bar = document.getElementById('board-progress');
+  bar.classList.add('active');
+  PROGRESS_STEPS.forEach((s,i)=>{
+    const el=document.getElementById(s.id);
+    el.classList.remove('active','done');
+    document.getElementById(s.status).textContent='';
+    s.agents.forEach(a=>document.getElementById(a).classList.remove('active','done'));
+  });
+  activateStep(0);
+}
+
+function activateStep(idx){
+  if(idx>=PROGRESS_STEPS.length) return;
+  const s=PROGRESS_STEPS[idx];
+  const el=document.getElementById(s.id);
+  el.classList.add('active');
+  document.getElementById(s.status).textContent='läuft...';
+  s.agents.forEach(a=>document.getElementById(a).classList.add('active'));
+  progressTimer=setTimeout(()=>{
+    el.classList.remove('active'); el.classList.add('done');
+    document.getElementById(s.status).textContent='✓';
+    s.agents.forEach(a=>{
+      const ag=document.getElementById(a);
+      ag.classList.remove('active'); ag.classList.add('done');
+    });
+    activateStep(idx+1);
+  }, s.duration);
+}
+
+function hideProgress(){
+  clearTimeout(progressTimer);
+  PROGRESS_STEPS.forEach(s=>{
+    const el=document.getElementById(s.id);
+    el.classList.remove('active'); el.classList.add('done');
+    document.getElementById(s.status).textContent='✓';
+    s.agents.forEach(a=>{
+      const ag=document.getElementById(a);
+      ag.classList.remove('active'); ag.classList.add('done');
+    });
+  });
+  setTimeout(()=>{
+    const bar=document.getElementById('board-progress');
+    bar.classList.remove('active');
+    PROGRESS_STEPS.forEach(s=>{
+      document.getElementById(s.id).classList.remove('done');
+    });
+  }, 800);
+}
+
+function setSending(v){
+  const btn=document.getElementById('send-btn');
+  btn.disabled=v;
+  document.getElementById('send-label').innerHTML=v?'<div class="spinner"></div>':'Senden';
+  if(v) showProgress(); else hideProgress();
+}
+
+let mediaRec,audioChunks=[];
+async function startRecording(e){
+  if(e) e.preventDefault();
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRec=new MediaRecorder(stream,{mimeType:'audio/webm'});
+    audioChunks=[];
+    mediaRec.ondataavailable=ev=>audioChunks.push(ev.data);
+    mediaRec.start();
+    document.getElementById('record-btn').classList.add('recording');
+  }catch(e){alert('Mikrofon-Zugriff verweigert');}
+}
+async function stopRecording(){
+  if(!mediaRec||mediaRec.state==='inactive') return;
+  document.getElementById('record-btn').classList.remove('recording');
+  mediaRec.stop();
+  mediaRec.onstop=async()=>{
+    const blob=new Blob(audioChunks,{type:'audio/webm'});
+    if(blob.size<500) return;
+    addMsg('system','🎤 Wird verarbeitet...');
+    setSending(true);
+    try{
+      const form=new FormData();
+      form.append('audio',blob,'voice.webm');
+      form.append('author','Jürgen');
+      const res=await fetch(`${BASE}/ingest`,{method:'POST',headers:{'x-openai-key':OPENAI_KEY},body:form});
+      const d=await res.json();
+      if(d.error) throw new Error(d.error);
+      if(d.transcript) addMsg('user','🎤 '+d.transcript);
+      addMsg('ai',d.summary,d);
+    }catch(e){ addMsg('error','⚠️ '+e.message); }
+    setSending(false);
+    mediaRec.stream.getTracks().forEach(t=>t.stop());
+  };
+}
+
+function handleEntKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();runEntrepreneur();}}
+
+async function runEntrepreneur(){
+  const inp=document.getElementById('ent-input');
+  const text=inp.value.trim();
+  if(!text||!OPENAI_KEY){
+    if(!OPENAI_KEY) alert('Bitte zuerst OpenAI Key eingeben (Chat-Tab).');
+    return;
+  }
+  const btn=document.getElementById('ent-btn');
+  btn.disabled=true;
+  document.getElementById('ent-label').innerHTML='<div class="spinner"></div>';
+
+  const results=document.getElementById('ent-results');
+  results.innerHTML='<div class="empty" style="padding:32px">🚀 Pragmatist denkt nach...</div>';
+
+  try{
+    const systemPrompt=`Du bist der Pragmatist-Agent im PRISM Board. Du denkst wie ein erfahrener Unternehmer und Optimierer.
+Deine Aufgabe: Für jeden beschriebenen Prozess oder jede Anforderung findest du pragmatische Wege, die:
+1. Komplexität radikal reduzieren (SIMPLIFY)
+2. Technologie & Automatisierung nutzen (AUTOMATE / TECH)
+3. Anforderungen neu denken statt blind umsetzen (REFRAME)
+4. Trotzdem compliant und zertifizierungsfähig bleiben (nie Compliance opfern)
+
+Antworte IMMER als JSON mit dieser Struktur:
+{
+  "topic": "Kurzer Titel des analysierten Themas",
+  "status_quo_problem": "Was ist das eigentliche Problem am aktuellen Ansatz?",
+  "levers": [
+    {
+      "title": "Hebel-Titel",
+      "category": "automate|simplify|reframe|tech",
+      "idea": "Konkrete Idee wie man es besser macht",
+      "effort": "XS|S|M|L",
+      "impact": "hoch|mittel|niedrig",
+      "compliance_status": "green|yellow|red",
+      "compliance_note": "Warum bleibt Compliance erhalten (oder was zu prüfen ist)",
+      "example": "Konkretes Beispiel oder Analogie"
+    }
+  ],
+  "bold_move": "Die eine radikale Idee, die die meisten nicht wagen würden – aber funktionieren könnte",
+  "watch_out": "Das eine Risiko, das man nicht ignorieren darf"
+}
+Sei konkret, direkt, unternehmerisch. Keine generischen Phrasen.`;
+
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+OPENAI_KEY},
+      body:JSON.stringify({
+        model:'gpt-4o',
+        temperature:0.7,
+        response_format:{type:'json_object'},
+        messages:[
+          {role:'system',content:systemPrompt},
+          {role:'user',content:text}
+        ]
+      })
+    });
+    const raw=await res.json();
+    if(raw.error) throw new Error(raw.error.message);
+    const d=JSON.parse(raw.choices[0].message.content);
+    renderEntResult(d, text);
+    inp.value=''; inp.style.height='auto';
+  }catch(e){
+    results.innerHTML=`<div class="empty">⚠️ Fehler: ${esc(e.message)}</div>`;
+  }
+  btn.disabled=false;
+  document.getElementById('ent-label').textContent='Analysieren';
+}
+
+function renderEntResult(d, originalQuery){
+  const results=document.getElementById('ent-results');
+  const catIcon={'automate':'⚙️','simplify':'✂️','reframe':'🔄','tech':'💻'};
+  const catClass={'automate':'automate','simplify':'simplify','reframe':'reframe','tech':'tech'};
+  const dotClass={'green':'dot-green','yellow':'dot-yellow','red':'dot-red'};
+  const effortLabel={'XS':'Aufwand: Mini','S':'Aufwand: Klein','M':'Aufwand: Mittel','L':'Aufwand: Groß'};
+
+  const leversHtml=(d.levers||[]).map(l=>`
+    <div class="ent-lever">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+        <span>${catIcon[l.category]||'💡'}</span>
+        <div class="ent-lever-title">${esc(l.title)}</div>
+        <span class="hack-tag ${catClass[l.category]||\'\'}">${esc(l.category)}</span>
+        <span style="font-size:11px;color:var(--muted)">${effortLabel[l.effort]||''} · Impact: ${esc(l.impact)}</span>
+      </div>
+      <div class="ent-lever-desc">${esc(l.idea)}</div>
+      ${l.example?`<div style="font-size:11px;color:var(--muted);margin-top:6px;font-style:italic">→ ${esc(l.example)}</div>`:''}
+      <div class="compliance-row">
+        <div class="compliance-dot ${dotClass[l.compliance_status]||'dot-yellow'}"></div>
+        <div style="color:var(--muted)">${esc(l.compliance_note||'')}</div>
+      </div>
+    </div>`).join('');
+
+  const card=document.createElement('div');
+  card.className='ent-card';
+  card.innerHTML=`
+    <div class="ent-card-header">
+      <span style="font-size:18px">🚀</span>
+      <div class="ent-card-title">${esc(d.topic||originalQuery)}</div>
+      <span style="font-size:11px;color:var(--muted)">${new Date().toLocaleDateString('de-DE')}</span>
+    </div>
+    <div class="ent-card-body">
+      <div>
+        <div class="ent-section-label">Status-quo Problem</div>
+        <div class="ent-section-value" style="color:var(--muted)">${esc(d.status_quo_problem)}</div>
+      </div>
+      <div>
+        <div class="ent-section-label">Optimierungshebel (${(d.levers||[]).length})</div>
+        ${leversHtml}
+      </div>
+      ${d.bold_move?`
+      <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:12px;">
+        <div class="ent-section-label" style="color:var(--entrepreneur)">⚡ Bold Move</div>
+        <div class="ent-section-value">${esc(d.bold_move)}</div>
+      </div>`:''}
+      ${d.watch_out?`
+      <div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:12px;">
+        <div class="ent-section-label" style="color:#fca5a5">⚠️ Watch Out</div>
+        <div class="ent-section-value" style="color:var(--muted)">${esc(d.watch_out)}</div>
+      </div>`:''}
+    </div>`;
+
+  const existingEmpty=results.querySelector('.ent-empty,.empty');
+  if(existingEmpty) results.innerHTML='';
+  results.insertBefore(card, results.firstChild);
+  results.scrollTop=0;
+}
+
+async function loadArtifacts(){
+  document.getElementById('artifacts-panel').innerHTML='<div class="empty">Lade...</div>';
+  try{
+    const res=await fetch(`${BASE}/data-api?resource=artifacts`);
+    allArtifacts=await res.json();
+    buildFilters();
+    renderArtifacts(null);
+  }catch(e){ document.getElementById('artifacts-panel').innerHTML=`<div class="empty">Fehler: ${e.message}</div>`; }
+}
+let allArtifacts=[];
+function buildFilters(){
+  const types=[...new Set(allArtifacts.map(a=>a.artifact_type))];
+  const bar=document.getElementById('artifact-filters');
+  bar.innerHTML=`<button class="filter-chip active" onclick="filterArtifacts(null,this)">Alle (${allArtifacts.length})</button>`;
+  types.forEach(t=>{
+    const c=allArtifacts.filter(a=>a.artifact_type===t).length;
+    bar.innerHTML+=`<button class="filter-chip" onclick="filterArtifacts('${t}',this)">${t} (${c})</button>`;
+  });
+}
+function filterArtifacts(type,btn){
+  document.querySelectorAll('#artifact-filters .filter-chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  renderArtifacts(type);
+}
+function renderArtifacts(type){
+  const items=type?allArtifacts.filter(a=>a.artifact_type===type):allArtifacts;
+  const panel=document.getElementById('artifacts-panel');
+  if(!items.length){panel.innerHTML='<div class="empty">Noch keine Artefakte.<br>Schick deinen ersten Input.</div>';return;}
+  panel.innerHTML=items.map(a=>`
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">${esc(a.title)}</div><div class="card-meta">v${a.version} · ${fmtDate(a.created_at)}</div></div>
+        <span class="badge badge-type">${esc(a.artifact_type)}</span>
+      </div>
+      <div class="content-md" onclick="this.classList.toggle('expanded')">${esc(a.content_md)}</div>
+    </div>`).join('');
+}
+
+async function loadDecisions(){
+  document.getElementById('decisions-panel').innerHTML='<div class="empty">Lade...</div>';
+  try{
+    const res=await fetch(`${BASE}/data-api?resource=decisions`);
+    const d=await res.json();
+    renderDecisions(d);
+  }catch(e){ document.getElementById('decisions-panel').innerHTML=`<div class="empty">Fehler: ${e.message}</div>`; }
+}
+function renderDecisions(list){
+  const panel=document.getElementById('decisions-panel');
+  if(!list.length){panel.innerHTML='<div class="empty">Noch keine Decisions.<br>Das Board erstellt ADRs automatisch.</div>';return;}
+  panel.innerHTML=list.map(d=>`
+    <div class="decision-card">
+      <div class="decision-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.arr').textContent=this.nextElementSibling.classList.contains('open')?'▲':'▼'">
+        <span class="badge badge-${d.status}">${d.status}</span>
+        <span style="font-weight:600;font-size:14px;flex:1">${d.decision_key?esc(d.decision_key)+': ':''}${esc(d.title)}</span>
+        <span style="font-size:12px;color:var(--muted)">${fmtDate(d.created_at)}</span>
+        <span class="arr" style="color:var(--muted);font-size:12px">▼</span>
+      </div>
+      <div class="decision-body">
+        ${d.context_md?`<div class="dl">Kontext</div><div class="dt">${esc(d.context_md)}</div>`:''}
+        ${d.decision_md?`<div class="dl">Entscheidung</div><div class="dt">${esc(d.decision_md)}</div>`:''}
+        ${d.consequences_md?`<div class="dl">Konsequenzen</div><div class="dt">${esc(d.consequences_md)}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function dragOver(e){e.preventDefault();document.getElementById('upload-zone').classList.add('dragover');}
+function dragLeave(e){document.getElementById('upload-zone').classList.remove('dragover');}
+function dropFile(e){
+  e.preventDefault();
+  dragLeave(e);
+  const f=e.dataTransfer.files[0];
+  if(f) prepareUpload(f);
+}
+function fileSelected(e){
+  const f=e.target.files[0];
+  if(f) prepareUpload(f);
+}
+function prepareUpload(file){
+  selectedFile=file;
+  document.getElementById('upload-filename').textContent=`📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  document.getElementById('upload-title').value=file.name.replace(/\.[^.]+$/,'');
+  document.getElementById('upload-form').style.display='flex';
+  document.getElementById('upload-zone').style.display='none';
+}
+function cancelUpload(){
+  selectedFile=null;
+  document.getElementById('upload-form').style.display='none';
+  document.getElementById('upload-zone').style.display='block';
+  document.getElementById('file-input').value='';
+}
+async function uploadFile(){
+  if(!selectedFile||!OPENAI_KEY) return;
+  const title=document.getElementById('upload-title').value.trim()||selectedFile.name;
+  const docType=document.getElementById('upload-doctype').value;
+  const btn=document.getElementById('upload-btn');
+  btn.disabled=true;
+  document.getElementById('upload-label').innerHTML='<div class="spinner"></div>';
+  document.getElementById('upload-progress-bar-wrap').style.display='block';
+  let pct=0; const iv=setInterval(()=>{pct=Math.min(pct+2,85);document.getElementById('upload-progress-bar').style.width=pct+'%';},200);
+  try{
+    const form=new FormData();
+    form.append('file',selectedFile,selectedFile.name);
+    form.append('title',title);
+    form.append('doc_type',docType);
+    const res=await fetch(`${BASE}/upload`,{method:'POST',headers:{'x-openai-key':OPENAI_KEY},body:form});
+    const d=await res.json();
+    clearInterval(iv);
+    document.getElementById('upload-progress-bar').style.width='100%';
+    if(d.error) throw new Error(d.error);
+    setTimeout(()=>{
+      cancelUpload();
+      loadUploadHistory();
+      document.querySelectorAll('.nav-tab')[0].click();
+      addMsg('system',`✅ ${d.message}`);
+    },500);
+  }catch(e){
+    clearInterval(iv);
+    alert('Upload Fehler: '+e.message);
+    btn.disabled=false;
+    document.getElementById('upload-label').textContent='Hochladen & einbetten';
+  }
+}
+async function loadUploadHistory(){
+  const el=document.getElementById('upload-history');
+  try{
+    const res=await fetch(`${BASE}/data-api?resource=artifacts`);
+    const all=await res.json();
+    const docs=all.filter(a=>['reference_document','standard_dna','object_model_delta','workflow_blueprint','phase_fit_matrix','assumptions','glossary'].includes(a.artifact_type));
+    if(!docs.length){el.innerHTML='<div class="empty" style="padding:16px">Noch keine Dokumente hochgeladen.</div>';return;}
+    const icons={'reference_document':'📄','standard_dna':'🏛️','object_model_delta':'🔷','workflow_blueprint':'🔄','phase_fit_matrix':'📊','assumptions':'💡','glossary':'📖'};
+    el.innerHTML=docs.map(d=>`
+      <div class="upload-item">
+        <div class="upload-item-icon">${icons[d.artifact_type]||'📄'}</div>
+        <div class="upload-item-info">
+          <div class="upload-item-title">${esc(d.title)}</div>
+          <div class="upload-item-meta">${esc(d.artifact_type)} · v${d.version} · ${fmtDate(d.created_at)}</div>
+        </div>
+        <span class="badge badge-type">${esc(d.artifact_type)}</span>
+      </div>`).join('');
+  }catch(e){el.innerHTML=`<div class="empty">Fehler: ${e.message}</div>`;}
+}
+
+checkConfig();
+</script>
+</body>
+</html>
